@@ -11,9 +11,9 @@ print(symbols_raw)
 # print(r.text)
 
 # IEX Token, base stable url
-# Api_Token='Tpk_059b97af715d417d9f49f50b51b1c448'
-api_token='pk_817f9b4079bb4b798a268ea30e64c465'
-sb_api_token='Tpk_eb546659d8f84166adce8be3c60ac9d4'
+# Api_Token='-'
+api_token='-'
+sb_api_token='-'
 sb_base_url=f'https://sandbox.iexapis.com/stable/'
 quote_endpoint='stock/{symbol}/quote?token={sb_api_token}'
 batch_endpoint='/stock/{symbol}/batch/?token={sb_api_token}'
