@@ -1,0 +1,147 @@
+# Imports:
+import pandas as pd, numpy as np, requests as rq, math, csv #XlsxWriter as xlsw, math
+
+# Get Tickers
+symbols_raw=pd.read_csv('Tut_Downloads/sp_500_stocks.csv')
+print(symbols_raw)
+
+# # 
+# # proxies={'https': '167.114.96.27:9300'}
+# r=rq.get('https://httpbin.org/ip',proxies=proxies)
+# print(r.text)
+
+# IEX Token, base stable url
+# Api_Token='Tpk_059b97af715d417d9f49f50b51b1c448'
+api_token='pk_817f9b4079bb4b798a268ea30e64c465'
+sb_api_token='Tpk_eb546659d8f84166adce8be3c60ac9d4'
+sb_base_url=f'https://sandbox.iexapis.com/stable/'
+quote_endpoint='stock/{symbol}/quote?token={sb_api_token}'
+batch_endpoint='/stock/{symbol}/batch/?token={sb_api_token}'
+
+# # [...] & request data
+# symbol='tsla'
+# api_url=f'https://sandbox.iexapis.com/stable/stock/{symbol}/quote?token={sb_api_token}'
+# data=rq.get(api_url).json()
+# # print('[status]: ',data.status_code)
+# # for (i) in data.headers:
+# #     print(i,'...... ',data.headers[i])
+
+# # display data
+# for i in data:
+#     print(i,'......',data[i])
+
+# # parse required data from request
+# latest_price=data['latestPrice']
+# market_cap=data['marketCap']
+# print('Market Cap ...... ',market_cap/100000000000)
+# print('Last Price ...... ',latest_price)
+
+# # create pandas dataframe,
+# columns=['Ticker','Price','Market Cap','Shares (to buy)']
+# df=pd.DataFrame(columns=columns)
+
+# # print(tickers_raw)
+# for i in symbols_raw['Ticker']:
+#     print(i)
+
+# create pandas series, append it to dataframe
+# df.append(pd.Series([symbol,latest_price,market_cap,'pending'],index=columns),ignore_index=True)
+
+symbols_arr=[]
+for i in symbols_raw['Ticker']:
+    symbols_arr.append(i)
+print(symbols_arr)
+
+# # iex singular call
+# # df=df
+# for symbol in symbols_arr:
+#     api_url=f'https://sandbox.iexapis.com/stable/stock/{ticker}/quote?token={sb_api_token}'
+#     data=rq.get(api_url).json()
+#     df=df.append(pd.Series([ticker,data['latestPrice'],data['marketCap']/100000000000,'pending'],index=columns), ignore_index=True)
+
+# grouping generator function (to satisfy iex call constraints)
+def grouper(ls,lim):
+    for i in range(0,len(ls),lim):
+        yield ls[i:i+lim
+
+# get symbol-batches as arr
+symbol_batches=list(grouper(symbols_raw['Ticker'],100))
+symbol_batches_arr=[]
+# print(symbols_grouped)
+for i in range(0,len(symbol_batches)):
+    symbol_batches_arr.append(','.join(symbol_batches[i]))
+print(symbol_batches_arr)
+
+# df resetter
+def new_df():
+    global columns
+    columns=['Ticker','Price','Market Cap','Shares (to buy)']
+    df_reset=pd.DataFrame(columns=columns)
+    return
+new_df=new_df()
+print(new_df)
+
+# iex batch call, append to pandas dataframe
+df0=new_df
+for batch in symbol_batches_arr:
+    batch_api_url=f'{sb_base_url}/stock/market/batch?symbols={batch}&types=quote&token={sb_api_token}'
+    data=rq.get(batch_api_url)
+    data_js=data.json()
+#     for (i) in data.headers:
+#         print(i,'...... ',data.headers[i])
+    print('STATUS_CODE: ... ',data.status_code,'\n\nDATA: ... ')
+#     print('batch_symbols ... ..',batch_symbols,'\n\nsymbol ... ..',symbol,'\n\ndata ... ',[i for i in data])
+    for symbol in batch.split(','):
+#         print('current .... .',data_js[symbol],'batch .... .',batch)
+        
+        df0=df0.append(pd.Series(
+        [symbol, data_js[symbol]['quote']['latestPrice'],data_js[symbol]['quote']['marketCap'],'pending'],index=columns),ignore_index=True)
+        
+# hold base df vals in mutable df
+df=df0
+print(df)
+
+# # 
+# # symbol_batches_arr_symbols=[i.split('.') for i in symbol_batches_arr]
+# print('symbol_batches_arr ... ..',symbol_batches_arr)
+# for batch in symbol_batches_arr:
+#     batch_symbols=batch.split(',')
+#     print('batch_symbols ... ..',batch_symbols,'\n\nsymbol ... ..',symbol,'\n\ndata ... ',[i for i in data])
+#     for symbol in batch:
+#         print(data,'current .... .',data[symbol],'batch .... .',batch,'\n\ndata .... .')
+#         df=df.append(pd.Series(
+#         [symbol, data[symbol]['quote']['latestPrice'],data[symbol]['quote']['marketCap'],'pending'],index=columns),ignore_index=True)
+
+# get portfolio value
+try:
+    pf_val=float(input('Pleas input value of portfolio ... .. ... ..'))
+except ValueError:
+    print('value not accepted')
+    pf_val=float(input('Pleas input value of portfolio ... .. ... ..'))
+
+# calculate portfolio weight distribution per equity
+position_dist=pf_val/len(df.index)
+print(position_dist)
+
+# calculate shares amount to order
+# order_n_shares=position_dist/df['Ticker'] 
+n_stocks=len(df.index)
+for i in range(len(df.index)):
+    df.loc[i,'Shares (to buy)']= position_dist/df.loc[i,'Price']#math.floor(position_dist/df.loc[i,'Price'])
+print(df)
+
+# style dataframe view
+df.style.format({'Price':'${:.2f}','Market Cap':'${:.0f}','Shares (to buy)':'{:,.2f}'})
+
+df2=pd.DataFrame(columns=columns)
+# for i in df:
+#     df2.append(pd.Series([i['Ticker'],i['Price'],i['Market Cap'],i['Shares (to buy)']]))
+print(df)
+
+# output dataframe to csv
+writer=df.to_csv('./sb_s&p_out.csv',index=False)
+
+# 
+reader=pd.read_csv('./sb_s&p_out.csv')
+print(reader.loc[1]['Price'])
+
